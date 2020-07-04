@@ -5,6 +5,9 @@
 #include <opencv2/core/directx.hpp>
 #include <d3d11.h>
 #include <opencv2/imgproc/types_c.h>
+#include <iostream> 
+#include <thread>
+#include <queue>
 #pragma comment(lib,"d3d11.lib")
 
 #include "parsec-dso.h"
@@ -93,6 +96,27 @@ int32_t init_camera(cv::VideoCapture *vc_camera, int camera_id)
 	}
 }
 
+void read_thread(cv::VideoCapture *vc_camera, std::queue<cv::Mat> *frame_que)
+{
+	cv::Mat frame;
+	while (true) {
+
+		vc_camera->read(frame);
+		if (frame_que->empty() == false) {
+			frame_que->pop();
+		}
+		frame_que->push(frame);
+	}
+}
+
+std::thread start_camera_thread(cv::VideoCapture *vc_camera, int camera_id, std::queue<cv::Mat> *frame_que)
+{
+	int ret_val;
+	ret_val = init_camera(vc_camera, camera_id);
+	std::thread read(read_thread, vc_camera, frame_que);
+	return read;
+}
+
 int32_t main(int32_t argc, char** argv)
 {
 	if (argc < 3) {
@@ -105,9 +129,15 @@ int32_t main(int32_t argc, char** argv)
 
 	cv::VideoCapture camera;
 	cv::Mat frame;
-	int result = init_camera(&camera, 1);
+	std::queue<cv::Mat> queue_1;
 
-	camera.read(frame);
+	std::thread cam_thread = start_camera_thread(&camera, 1, &queue_1);
+
+	while (queue_1.empty()) {
+
+	}
+	frame = queue_1.front();
+	/*camera.read(frame);*/
 	cv::Mat as4channelMat(frame.size(), CV_MAKE_TYPE(frame.depth(), 4));
 	cv::Mat convertedImage(frame.size(), CV_MAKE_TYPE(frame.depth(), 4));
 
@@ -158,7 +188,8 @@ int32_t main(int32_t argc, char** argv)
 	//test_camera(&camera);
 
 	while (true) {
-		camera >> frame;
+
+		frame = queue_1.front();
 
 		cv::cvtColor(frame, convertedImage, CV_BGR2BGRA); //CV_8UC3 -> CV_8UC4
 
