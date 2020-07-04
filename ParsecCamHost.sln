@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.1169
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ParsecCamHost", "ParsecCamHost.vcxproj", "{6D31F1C0-F3F8-4E11-A0FC-8DFE30FA5E0D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6D31F1C0-F3F8-4E11-A0FC-8DFE30FA5E0D}.Debug|x64.ActiveCfg = Debug|x64
+		{6D31F1C0-F3F8-4E11-A0FC-8DFE30FA5E0D}.Debug|x64.Build.0 = Debug|x64
+		{6D31F1C0-F3F8-4E11-A0FC-8DFE30FA5E0D}.Debug|x86.ActiveCfg = Debug|Win32
+		{6D31F1C0-F3F8-4E11-A0FC-8DFE30FA5E0D}.Debug|x86.Build.0 = Debug|Win32
+		{6D31F1C0-F3F8-4E11-A0FC-8DFE30FA5E0D}.Release|x64.ActiveCfg = Release|x64
+		{6D31F1C0-F3F8-4E11-A0FC-8DFE30FA5E0D}.Release|x64.Build.0 = Release|x64
+		{6D31F1C0-F3F8-4E11-A0FC-8DFE30FA5E0D}.Release|x86.ActiveCfg = Release|Win32
+		{6D31F1C0-F3F8-4E11-A0FC-8DFE30FA5E0D}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C2EB1EF9-B7D1-4187-90FC-F0CEE529FA6E}
+	EndGlobalSection
+EndGlobal
