@@ -7,6 +7,7 @@
 #include <opencv2/imgproc/types_c.h>
 #include <iostream> 
 #include <thread>
+#include <mutex>
 #include <queue>
 #pragma comment(lib,"d3d11.lib")
 
@@ -80,10 +81,11 @@ int32_t test_camera(cv::VideoCapture *vc_camera)
 
 int32_t init_camera(cv::VideoCapture *vc_camera, int camera_id)
 {
-	std::string camera_url = "rtmp://192.168.1.188:1950/live/origin" + std::to_string(camera_id);
+	//std::string camera_url = "rtmp://192.168.1.188:1950/live/origin" + std::to_string(camera_id);
+	std::string camera_url = "rtmp://192.168.1.188/live/live";
 	*vc_camera = cv::VideoCapture(camera_url);
 	vc_camera->set(cv::CAP_PROP_FRAME_WIDTH, 1440);
-	vc_camera->set(cv::CAP_PROP_FRAME_HEIGHT, 1920);
+	vc_camera->set(cv::CAP_PROP_FRAME_HEIGHT, 1440);
 	vc_camera->set(cv::CAP_PROP_BUFFERSIZE, 0);
 
 	//test_camera(vc_camera);
@@ -96,20 +98,23 @@ int32_t init_camera(cv::VideoCapture *vc_camera, int camera_id)
 	}
 }
 
-void read_thread(cv::VideoCapture *vc_camera, std::queue<cv::Mat> *frame_que)
+void read_thread(cv::VideoCapture *vc_camera, std::list<cv::Mat> *frame_que)
 {
 	cv::Mat frame;
 	while (true) {
 
 		vc_camera->read(frame);
 		if (frame_que->empty() == false) {
-			frame_que->pop();
+			frame_que->push_front(frame);
+			/*frame_que->pop_back();*/
 		}
-		frame_que->push(frame);
+		else {
+			frame_que->push_front(frame);
+		}
 	}
 }
 
-std::thread start_camera_thread(cv::VideoCapture *vc_camera, int camera_id, std::queue<cv::Mat> *frame_que)
+std::thread start_camera_thread(cv::VideoCapture *vc_camera, int camera_id, std::list<cv::Mat> *frame_que)
 {
 	int ret_val;
 	ret_val = init_camera(vc_camera, camera_id);
@@ -129,7 +134,7 @@ int32_t main(int32_t argc, char** argv)
 
 	cv::VideoCapture camera;
 	cv::Mat frame;
-	std::queue<cv::Mat> queue_1;
+	std::list<cv::Mat> queue_1;
 
 	std::thread cam_thread = start_camera_thread(&camera, 1, &queue_1);
 
@@ -144,7 +149,10 @@ int32_t main(int32_t argc, char** argv)
 	int conversion[] = { 0, 0, 1, 1, 2, 2, -1, 3 };
 	cv::mixChannels(&frame, 1, &as4channelMat, 1, conversion, 4);
 
-	cv::cvtColor(frame, convertedImage, CV_BGR2BGRA); //CV_8UC3 -> CV_8UC4
+	try {
+		cv::cvtColor(frame, convertedImage, CV_BGR2BGRA); //CV_8UC3 -> CV_8UC4
+	}
+	catch (...) {}
 
 
 	ID3D11Device* device = nullptr;
@@ -188,23 +196,23 @@ int32_t main(int32_t argc, char** argv)
 	//test_camera(&camera);
 
 	while (true) {
-
-		frame = queue_1.front();
-
-		cv::cvtColor(frame, convertedImage, CV_BGR2BGRA); //CV_8UC3 -> CV_8UC4
-
-		cv::directx::convertToD3D11Texture2D(convertedImage, tex);
-		ParsecStatus e = ParsecHostD3D11SubmitFrame(parsec, device, context, tex);
-
-		for (ParsecHostEvent event; ParsecHostPollEvents(parsec, 1, &event);) {
-			switch (event.type) {
-			case HOST_EVENT_GUEST_STATE_CHANGE:
-				guestStateChange(&event.guestStateChange.guest);
-				break;
-			default:
-				break;
+			frame = queue_1.front();
+			try {
+				cv::cvtColor(frame, convertedImage, CV_BGR2BGRA); //CV_8UC3 -> CV_8UC4
+				cv::directx::convertToD3D11Texture2D(convertedImage, tex);
 			}
-		}
+			catch(...){}
+			ParsecStatus e = ParsecHostD3D11SubmitFrame(parsec, device, context, tex);
+
+			for (ParsecHostEvent event; ParsecHostPollEvents(parsec, 1, &event);) {
+				switch (event.type) {
+				case HOST_EVENT_GUEST_STATE_CHANGE:
+					guestStateChange(&event.guestStateChange.guest);
+					break;
+				default:
+					break;
+				}
+			}
 	}
 
 except:
